@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线购物网站 - 订单管理</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>在线购物网站 - 管理员</h1>
+            </div>
+            <div class="nav-links">
+                <a href="admin.html">产品管理</a>
+                <a href="admin-orders.html" class="active">订单管理</a>
+                <a href="admin-reports.html">销售报表</a>
+                <a href="javascript:void(0)" id="logoutBtn">退出登录</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="admin-container">
+            <h2>订单管理</h2>
+            
+            <div class="orders-list">
+                <div id="adminOrdersContainer">
+                    <!-- 订单列表将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/common.js"></script>
+    <script src="js/admin-orders.js"></script>
+</body>
+</html>

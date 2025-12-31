@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线购物网站 - 我的订单</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>在线购物网站</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="cart.html" class="cart-link">购物车 <span id="cartCount">0</span></a>
+                <a href="orders.html" class="active">我的订单</a>
+                <a href="javascript:void(0)" id="logoutBtn">退出登录</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <h2>我的订单</h2>
+        
+        <div class="orders-container" id="ordersContainer">
+            <!-- 订单列表将通过JavaScript动态加载 -->
+        </div>
+    </main>
+
+    <script src="js/common.js"></script>
+    <script src="js/orders.js"></script>
+</body>
+</html>

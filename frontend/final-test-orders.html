@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最终订单测试</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>在线购物网站</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="cart.html" class="cart-link">购物车 <span id="cartCount">0</span></a>
+                <a href="orders.html" class="active">我的订单</a>
+                <a href="javascript:void(0)" id="logoutBtn">退出登录</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <h2>我的订单</h2>
+        
+        <div class="orders-container" id="ordersContainer">
+            <!-- 订单列表将通过JavaScript动态加载 -->
+        </div>
+    </main>
+
+    <script>
+        // 模拟 common.js 中的 showMessage 函数
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('ordersContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            messageDiv.style.cssText = `
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 5px;
+                background-color: ${type === 'error' ? '#ffebee' : '#e3f2fd'};
+                color: ${type === 'error' ? '#c62828' : '#1565c0'};
+                font-weight: 500;
+            `;
+            container.insertBefore(messageDiv, container.firstChild);
+        }
+
+        // 模拟 fetchWithAuth 函数（返回模拟数据）
+        async function fetchWithAuth(url) {
+            console.log('模拟 API 请求:', url);
+            
+            // 模拟订单数据
+            const mockOrders = [
+                {
+                    "id": 8,
+                    "userId": 1,
+                    "totalAmount": "3.00",
+                    "status": "pending",
+                    "shippingAddress": "kkk",
+                    "paymentMethod": "alipay",
+                    "createdAt": "2025-12-10T15:18:35.000Z",
+                    "updatedAt": "2025-12-10T15:18:35.000Z",
+                    "OrderItems": [
+                        {
+                            "id": 9,
+                            "orderId": 8,
+                            "productId": 2,
+                            "quantity": 1,
+                            "price": "3.00",
+                            "createdAt": "2025-12-10T15:18:35.000Z",
+                            "updatedAt": "2025-12-10T15:18:35.000Z",
+                            "Product": {
+                                "id": 2,
+                                "name": "可乐",
+                                "description": "可以提神",
+                                "price": "3.00",
+                                "stock": 0,
+                                "category": "二",
+                                "image": null,
+                                "createdAt": "2025-12-10T14:51:05.000Z",
+                                "updatedAt": "2025-12-10T15:18:35.000Z"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "userId": 1,
+                    "totalAmount": "206.00",
+                    "status": "pending",
+                    "shippingAddress": "kkk",
+                    "paymentMethod": "alipay",
+                    "createdAt": "2025-12-10T15:07:45.000Z",
+                    "updatedAt": "2025-12-10T15:07:45.000Z",
+                    "OrderItems": [
+                        {
+                            "id": 2,
+                            "orderId": 2,
+                            "productId": 2,
+                            "quantity": 2,
+                            "price": "3.00",
+                            "createdAt": "2025-12-10T15:07:45.000Z",
+                            "updatedAt": "2025-12-10T15:07:45.000Z",
+                            "Product": {
+                                "id": 2,
+                                "name": "可乐",
+                                "description": "可以提神",
+                                "price": "3.00",
+                                "stock": 0,
+                                "category": "二",
+                                "image": null,
+                                "createdAt": "2025-12-10T14:51:05.000Z",
+                                "updatedAt": "2025-12-10T15:18:35.000Z"
+                            }
+                        },
+                        {
+                            "id": 3,
+                            "orderId": 2,
+                            "productId": 1,
+                            "quantity": 2,
+                            "price": "100.00",
+                            "createdAt": "2025-12-10T15:07:45.000Z",
+                            "updatedAt": "2025-12-10T15:07:45.000Z",
+                            "Product": {
+                                "id": 1,
+                                "name": "水瓶",
+                                "description": "可以装水",
+                                "price": "100.00",
+                                "stock": -5,
+                                "category": "二",
+                                "image": null,
+                                "createdAt": "2025-12-10T14:47:53.000Z",
+                                "updatedAt": "2025-12-10T15:17:27.000Z"
+                            }
+                        }
+                    ]
+                }
+            ];
+
+            // 模拟成功响应
+            return {
+                ok: true,
+                status: 200,
+                async json() {
+                    return mockOrders;
+                }
+            };
+        }
+
+        // 复制修复后的 orders.js 代码
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '待付款',
+                'paid': '已付款',
+                'shipped': '已发货',
+                'delivered': '已送达',
+                'cancelled': '已取消'
+            };
+            return statusMap[status] || status;
+        }
+
+        function getPaymentMethodText(method) {
+            const methodMap = {
+                'alipay': '支付宝',
+                'wechat': '微信支付',
+                'card': '银行卡'
+            };
+            return methodMap[method] || method;
+        }
+
+        function displayOrders(orders) {
+            const container = document.getElementById('ordersContainer');
+            
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>还没有订单记录</h3>
+                        <p>快去下单购买商品吧！</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-number">订单号: ${order.id}</div>
+                        <div class="order-status status-${order.status}">
+                            ${getStatusText(order.status)}
+                        </div>
+                    </div>
+                    <div class="order-items">
+                        ${order.OrderItems.map(item => `
+                            <div class="order-item">
+                                <div>
+                                    <span>${item.Product.name}</span>
+                                    <span> x ${item.quantity}</span>
+                                </div>
+                                <div>¥${parseFloat(item.Product.price * item.quantity).toFixed(2)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="order-summary">
+                        订单总价: ¥${parseFloat(order.totalAmount).toFixed(2)}
+                    </div>
+                    <div class="order-info">
+                        <p>下单时间: ${new Date(order.createdAt).toLocaleString()}</p>
+                        <p>收货地址: ${order.shippingAddress}</p>
+                        <p>支付方式: ${getPaymentMethodText(order.paymentMethod)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function fetchOrders() {
+            try {
+                const response = await fetchWithAuth('http://localhost:3000/api/orders');
+                
+                if (response.ok) {
+                    const orders = await response.json();
+                    displayOrders(orders);
+                } else {
+                    // 尝试解析错误信息
+                    try {
+                        const errorData = await response.json();
+                        showMessage('获取订单列表失败: ' + errorData.message, 'error');
+                    } catch (e) {
+                        showMessage('获取订单列表失败，请稍后重试', 'error');
+                    }
+                }
+            } catch (error) {
+                showMessage('获取订单列表失败，请稍后重试', 'error');
+            }
+        }
+
+        // 页面加载时获取订单列表
+        window.addEventListener('DOMContentLoaded', function() {
+            fetchOrders();
+        });
+    </script>
+</body>
+</html>

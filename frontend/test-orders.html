@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试订单列表</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #debugOutput {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .step {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>测试订单列表功能</h1>
+        
+        <div class="step">
+            <h3>1. 检查登录状态</h3>
+            <p id="loginStatus">检查中...</p>
+        </div>
+        
+        <div class="step">
+            <h3>2. 操作按钮</h3>
+            <button onclick="testLogin()">登录测试用户</button>
+            <button onclick="testFetchOrders()">获取订单列表</button>
+            <button onclick="logout()">退出登录</button>
+        </div>
+        
+        <div class="step">
+            <h3>3. 调试输出</h3>
+            <div id="debugOutput"></div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        // 重写showMessage函数，显示在页面上而不是消失
+        function showMessage(message, type) {
+            const debugOutput = document.getElementById('debugOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            debugOutput.innerHTML += `[${timestamp}] <span class="${type}">${message}</span>\n`;
+        }
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            const loginStatus = document.getElementById('loginStatus');
+            if (isLoggedIn()) {
+                loginStatus.innerHTML = '<span class="success">已登录</span>';
+                loginStatus.innerHTML += '<br>当前用户：' + JSON.stringify(getUser());
+            } else {
+                loginStatus.innerHTML = '<span class="error">未登录</span>';
+            }
+        }
+        
+        // 登录测试用户
+        async function testLogin() {
+            const debugOutput = document.getElementById('debugOutput');
+            debugOutput.innerHTML += '\n尝试登录测试用户...\n';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({"email":"testuser@example.com","password":"123456"})
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    debugOutput.innerHTML += '登录成功！\n';
+                    checkLoginStatus();
+                } else {
+                    const errorData = await response.json();
+                    debugOutput.innerHTML += '<span class="error">登录失败：' + errorData.message + '</span>\n';
+                }
+            } catch (error) {
+                debugOutput.innerHTML += '<span class="error">登录错误：' + error.message + '</span>\n';
+            }
+        }
+        
+        // 获取订单列表
+        async function testFetchOrders() {
+            const debugOutput = document.getElementById('debugOutput');
+            debugOutput.innerHTML += '\n\n尝试获取订单列表...\n';
+            
+            if (!isLoggedIn()) {
+                debugOutput.innerHTML += '<span class="error">未登录，请先登录</span>\n';
+                return;
+            }
+            
+            try {
+                const token = getToken();
+                debugOutput.innerHTML += '使用令牌：' + token + '\n';
+                
+                const response = await fetch('http://localhost:3000/api/orders', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                debugOutput.innerHTML += '响应状态码：' + response.status + '\n';
+                debugOutput.innerHTML += '响应头：' + JSON.stringify(Object.fromEntries(response.headers)) + '\n';
+                
+                if (response.ok) {
+                    const orders = await response.json();
+                    debugOutput.innerHTML += '获取成功！订单数量：' + orders.length + '\n';
+                    debugOutput.innerHTML += '订单数据：' + JSON.stringify(orders, null, 2) + '\n';
+                } else {
+                    const errorData = await response.json();
+                    debugOutput.innerHTML += '<span class="error">获取失败：' + JSON.stringify(errorData) + '</span>\n';
+                }
+            } catch (error) {
+                debugOutput.innerHTML += '<span class="error">错误：' + error.message + '</span>\n';
+            }
+        }
+        
+        // 页面加载时检查登录状态
+        window.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+</body>
+</html>

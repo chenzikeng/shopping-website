@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线购物网站 - 购物车</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>在线购物网站</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="cart.html" class="active cart-link">购物车 <span id="cartCount">0</span></a>
+                <a href="orders.html">我的订单</a>
+                <a href="javascript:void(0)" id="logoutBtn">退出登录</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <h2>我的购物车</h2>
+        
+        <div class="cart-container" id="cartContainer">
+            <!-- 购物车内容将通过JavaScript动态加载 -->
+        </div>
+
+        <div class="cart-summary" id="cartSummary" style="display: none;">
+            <h3>订单摘要</h3>
+            <p>商品总价: <span id="totalPrice">0</span></p>
+            <button id="checkoutBtn">结算</button>
+        </div>
+
+        <div class="checkout-form" id="checkoutForm" style="display: none;">
+            <h3>填写收货信息</h3>
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="shippingAddress">收货地址：</label>
+                    <textarea id="shippingAddress" name="shippingAddress" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod">支付方式：</label>
+                    <select id="paymentMethod" name="paymentMethod" required>
+                        <option value="alipay">支付宝</option>
+                        <option value="wechat">微信支付</option>
+                        <option value="card">银行卡</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit">提交订单</button>
+                    <button type="button" id="cancelCheckout">取消</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="js/common.js"></script>
+    <script src="js/cart.js"></script>
+</body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购买流程测试</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #bd2130;
+        }
+        .log-container {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            height: 200px;
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>购买流程测试</h1>
+            </div>
+            <div class="nav-links">
+                <a href="login.html" id="loginBtn">登录</a>
+                <a href="javascript:void(0)" id="logoutBtn" style="display: none;">退出登录</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="test-section">
+            <h3>测试步骤：</h3>
+            <ol>
+                <li>确保已登录用户账号</li>
+                <li>选择一个产品添加到购物车</li>
+                <li>查看购物车并确认订单</li>
+                <li>填写收货信息并选择支付方式</li>
+                <li>提交订单</li>
+                <li>检查订单是否创建成功</li>
+                <li>管理员登录并更新订单状态为已发货</li>
+                <li>检查是否收到发货通知邮件</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>1. 产品列表</h3>
+            <div id="productsList"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. 购物车</h3>
+            <div id="cartItems"></div>
+            <button class="btn" onclick="showCheckoutForm()">去结账</button>
+        </div>
+
+        <div class="test-section" id="checkoutSection" style="display: none;">
+            <h3>3. 订单结算</h3>
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="shippingAddress">收货地址：</label>
+                    <textarea id="shippingAddress" name="shippingAddress" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod">支付方式：</label>
+                    <select id="paymentMethod" name="paymentMethod" required>
+                        <option value="alipay">支付宝</option>
+                        <option value="wechat">微信支付</option>
+                        <option value="card">银行卡</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn">提交订单</button>
+                    <button type="button" class="btn" onclick="hideCheckoutForm()">取消</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="test-section">
+            <h3>4. 我的订单</h3>
+            <div id="myOrders"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. 测试日志</h3>
+            <div class="log-container" id="testLog"></div>
+        </div>
+    </main>
+
+    <script src="js/common.js"></script>
+    <script>
+        // 测试日志
+        function addLog(message) {
+            const logContainer = document.getElementById('testLog');
+            const logItem = document.createElement('div');
+            logItem.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            logContainer.appendChild(logItem);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 页面加载时检查登录状态
+        window.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            fetchProducts();
+            fetchCart();
+            fetchOrders();
+        });
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'inline';
+                addLog('用户已登录');
+            } else {
+                document.getElementById('loginBtn').style.display = 'inline';
+                document.getElementById('logoutBtn').style.display = 'none';
+                addLog('请先登录用户账号');
+            }
+        }
+
+        // 退出登录
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            checkLoginStatus();
+            addLog('用户已退出登录');
+        });
+
+        // 获取产品列表
+        async function fetchProducts() {
+            try {
+                const response = await fetch('http://localhost:3000/api/products');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayProducts(data.products);
+                    addLog(`成功获取 ${data.products.length} 个产品`);
+                }
+            } catch (error) {
+                console.error('获取产品失败:', error);
+                addLog('获取产品失败');
+            }
+        }
+
+        // 显示产品列表
+        function displayProducts(products) {
+            const container = document.getElementById('productsList');
+            container.innerHTML = products.map(product => `
+                <div class="product-card">
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}" style="width: 100px; height: 100px; object-fit: cover;">` : ''}
+                    <h3>${product.name}</h3>
+                    <p>¥${parseFloat(product.price).toFixed(2)}</p>
+                    <p>库存: ${product.stock}</p>
+                    <button class="btn" onclick="addToCart(${product.id})" ${product.stock <= 0 ? 'disabled' : ''}>
+                        ${product.stock <= 0 ? '库存不足' : '添加到购物车'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // 添加到购物车
+        async function addToCart(productId) {
+            try {
+                const response = await fetchWithAuth('http://localhost:3000/api/cart/add', {
+                    method: 'POST',
+                    body: JSON.stringify({ productId, quantity: 1 })
+                });
+                if (response.ok) {
+                    addLog('产品已添加到购物车');
+                    fetchCart();
+                }
+            } catch (error) {
+                console.error('添加到购物车失败:', error);
+                addLog('添加到购物车失败');
+            }
+        }
+
+        // 获取购物车
+        async function fetchCart() {
+            try {
+                const response = await fetchWithAuth('http://localhost:3000/api/cart');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayCart(data.cartItems);
+                    addLog(`购物车中有 ${data.cartItems.length} 个商品`);
+                }
+            } catch (error) {
+                console.error('获取购物车失败:', error);
+                addLog('获取购物车失败');
+            }
+        }
+
+        // 显示购物车
+        function displayCart(cartItems) {
+            const container = document.getElementById('cartItems');
+            if (cartItems.length === 0) {
+                container.innerHTML = '<p>购物车是空的</p>';
+                return;
+            }
+            container.innerHTML = cartItems.map(item => `
+                <div class="cart-item">
+                    <div class="item-info">
+                        <h3>${item.Product.name}</h3>
+                        <p>¥${parseFloat(item.Product.price).toFixed(2)} x ${item.quantity}</p>
+                        <p>小计: ¥${(parseFloat(item.Product.price) * item.quantity).toFixed(2)}</p>
+                    </div>
+                    <button class="btn btn-danger" onclick="removeFromCart(${item.id})")">删除</button>
+                </div>
+            `).join('');
+        }
+
+        // 从购物车移除
+        async function removeFromCart(itemId) {
+            try {
+                const response = await fetchWithAuth(`http://localhost:3000/api/cart/remove/${itemId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    addLog('商品已从购物车移除');
+                    fetchCart();
+                }
+            } catch (error) {
+                console.error('从购物车移除失败:', error);
+                addLog('从购物车移除失败');
+            }
+        }
+
+        // 显示结账表单
+        function showCheckoutForm() {
+            document.getElementById('checkoutSection').style.display = 'block';
+        }
+
+        // 隐藏结账表单
+        function hideCheckoutForm() {
+            document.getElementById('checkoutSection').style.display = 'none';
+        }
+
+        // 提交订单
+        document.getElementById('orderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const shippingAddress = document.getElementById('shippingAddress').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            
+            try {
+                const response = await fetchWithAuth('http://localhost:3000/api/orders/create', {
+                    method: 'POST',
+                    body: JSON.stringify({ shippingAddress, paymentMethod })
+                });
+                
+                if (response.ok) {
+                    const order = await response.json();
+                    addLog(`订单创建成功，订单号: ${order.order.id}`);
+                    addLog('系统将发送订单确认邮件');
+                    hideCheckoutForm();
+                    fetchCart(); // 购物车已清空
+                    fetchOrders(); // 刷新订单列表
+                } else {
+                    const data = await response.json();
+                    addLog('创建订单失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('创建订单失败:', error);
+                addLog('创建订单失败');
+            }
+        });
+
+        // 获取订单列表
+        async function fetchOrders() {
+            try {
+                const response = await fetchWithAuth('http://localhost:3000/api/orders');
+                if (response.ok) {
+                    const orders = await response.json();
+                    displayOrders(orders);
+                    addLog(`共获取 ${orders.length} 个订单`);
+                }
+            } catch (error) {
+                console.error('获取订单失败:', error);
+                addLog('获取订单失败');
+            }
+        }
+
+        // 显示订单列表
+        function displayOrders(orders) {
+            const container = document.getElementById('myOrders');
+            if (orders.length === 0) {
+                container.innerHTML = '<p>还没有订单记录</p>';
+                return;
+            }
+            container.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-number">订单号: ${order.id}</div>
+                        <div class="order-status status-${order.status}">
+                            ${getStatusText(order.status)}
+                        </div>
+                    </div>
+                    <div class="order-details">
+                        <p>总价: ¥${parseFloat(order.totalAmount).toFixed(2)}</p>
+                        <p>创建时间: ${new Date(order.createdAt).toLocaleString()}</p>
+                        <p>收货地址: ${order.shippingAddress}</p>
+                        <p>支付方式: ${getPaymentMethodText(order.paymentMethod)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取订单状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '待处理',
+                'processing': '处理中',
+                'shipped': '已发货',
+                'delivered': '已送达',
+                'cancelled': '已取消'
+            };
+            return statusMap[status] || status;
+        }
+
+        // 获取支付方式文本
+        function getPaymentMethodText(paymentMethod) {
+            const paymentMethods = {
+                'alipay': '支付宝',
+                'wechat': '微信支付',
+                'card': '银行卡'
+            };
+            return paymentMethods[paymentMethod] || paymentMethod;
+        }
+    </script>
+</body>
+</html>

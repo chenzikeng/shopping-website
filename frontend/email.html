@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虚拟邮件接收 - 在线购物网站</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>在线购物网站</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="cart.html" class="cart-link">购物车 <span id="cartCount">0</span></a>
+                <a href="orders.html">我的订单</a>
+                <a href="email.html" class="active">虚拟邮件</a>
+                <a href="javascript:void(0)" id="logoutBtn">退出登录</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>虚拟邮件接收</h2>
+            
+            <div class="email-section">
+                <div class="email-input">
+                    <label for="emailAddress">虚拟邮箱地址：</label>
+                    <input type="email" id="emailAddress" placeholder="输入虚拟邮箱地址">
+                    <button id="checkEmailBtn">检查邮件</button>
+                </div>
+                
+                <div class="email-list" id="emailList">
+                    <!-- 邮件列表将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/common.js"></script>
+    <script src="js/email.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线购物网站 - 首页</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>在线购物网站</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="active">首页</a>
+                <a href="cart.html" class="cart-link">购物车 <span id="cartCount">0</span></a>
+                <a href="orders.html">我的订单</a>
+                <a href="javascript:void(0)" id="logoutBtn">退出登录</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="搜索产品...">
+            <button id="searchBtn">搜索</button>
+        </div>
+
+        <div class="products-container" id="productsContainer">
+            <!-- 产品列表将通过JavaScript动态加载 -->
+        </div>
+    </main>
+
+    <script src="js/common.js"></script>
+    <script src="js/products.js"></script>
+</body>
+</html>
