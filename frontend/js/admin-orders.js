@@ -6,7 +6,7 @@ window.addEventListener('DOMContentLoaded', function() {
 // 获取订单列表
 async function fetchOrders() {
     try {
-        const response = await fetchWithAuth('http://localhost:3000/api/admin/orders');
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/admin/orders`);
         if (response.ok) {
             const data = await response.json();
             displayOrders(data.orders);
@@ -72,7 +72,7 @@ function displayOrders(orders) {
 // 更新订单状态
 async function updateOrderStatus(orderId, newStatus) {
     try {
-        const response = await fetchWithAuth(`http://localhost:3000/api/admin/orders/${orderId}/status`, {
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/admin/orders/${orderId}/status`, {
             method: 'PUT',
             body: JSON.stringify({ status: newStatus })
         });

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { User } = require('../models');
+const { User, LoginLog } = require('../models');
 const { generateToken, authMiddleware } = require('../middleware/auth');
 
 // 用户注册
@@ -53,14 +53,32 @@ router.post('/login', async (req, res) => {
     // 查找用户
     const user = await User.findOne({ where: { email } });
     if (!user) {
+      await LoginLog.create({
+        email,
+        success: false,
+        ipAddress: req.ip
+      });
       return res.status(401).json({ message: '邮箱或密码错误' });
     }
     
     // 验证密码
     const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
+      await LoginLog.create({
+        email,
+        success: false,
+        ipAddress: req.ip
+      });
       return res.status(401).json({ message: '邮箱或密码错误' });
     }
+    
+    await LoginLog.create({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      success: true,
+      ipAddress: req.ip
+    });
     
     // 生成JWT令牌
     const token = generateToken(user);

@@ -1,6 +1,15 @@
 // 页面加载时获取产品列表
 window.addEventListener('DOMContentLoaded', function() {
+    fetchCategories();
     fetchProducts();
+    
+    const addCategoryForm = document.getElementById('addCategoryForm');
+    if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addCategory();
+        });
+    }
     
     // 添加产品表单提交事件
     const addProductForm = document.getElementById('addProductForm');
@@ -12,10 +21,78 @@ window.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// 获取商品类别
+async function fetchCategories() {
+    try {
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/management/categories`);
+        if (!response.ok) return;
+        const data = await response.json();
+        const container = document.getElementById('categoriesContainer');
+        if (container) {
+            container.innerHTML = data.categories.map(category => `
+                <span class="category-chip">
+                    ${category.name}
+                    <button onclick="deleteCategory(${category.id})">×</button>
+                </span>
+            `).join('') || '<p>暂无类别</p>';
+        }
+
+        renderCategoryOptions(data.categories);
+    } catch (error) {
+        console.error('获取类别失败:', error);
+    }
+}
+
+function renderCategoryOptions(categories) {
+    const addSelect = document.getElementById('productCategory');
+    if (addSelect) {
+        const currentValue = addSelect.value;
+        addSelect.innerHTML = '<option value="">请选择商品类别</option>' + categories.map(category => `
+            <option value="${category.name}">${category.name}</option>
+        `).join('');
+        addSelect.value = currentValue;
+    }
+
+    const editSelect = document.getElementById('editProductCategory');
+    if (editSelect) {
+        const currentValue = editSelect.value;
+        editSelect.innerHTML = '<option value="">请选择商品类别</option>' + categories.map(category => `
+            <option value="${category.name}">${category.name}</option>
+        `).join('');
+        editSelect.value = currentValue;
+    }
+}
+
+async function addCategory() {
+    const name = document.getElementById('categoryName').value;
+    const description = document.getElementById('categoryDescription').value;
+    const response = await fetchWithAuth(`${getApiBaseUrl()}/api/management/categories`, {
+        method: 'POST',
+        body: JSON.stringify({ name, description })
+    });
+    if (response.ok) {
+        showMessage('类别添加成功', 'success');
+        document.getElementById('addCategoryForm').reset();
+        fetchCategories();
+    } else {
+        const data = await response.json();
+        showMessage('类别添加失败：' + data.message, 'error');
+    }
+}
+
+async function deleteCategory(id) {
+    if (!confirm('确定删除该类别吗？')) return;
+    const response = await fetchWithAuth(`${getApiBaseUrl()}/api/management/categories/${id}`, { method: 'DELETE' });
+    if (response.ok) {
+        showMessage('类别删除成功', 'success');
+        fetchCategories();
+    }
+}
+
 // 获取产品列表
 async function fetchProducts() {
     try {
-        const response = await fetchWithAuth('http://localhost:3000/api/admin/products');
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/admin/products`);
         if (response.ok) {
             const data = await response.json();
             displayProducts(data.products);
@@ -36,6 +113,7 @@ function displayProducts(products) {
             <h4>${product.name}</h4>
             <p class="product-price">¥${parseFloat(product.price).toFixed(2)}</p>
             <p class="product-stock">库存: ${product.stock}</p>
+            <p class="product-category">分类: ${product.category}</p>
             <p>${product.description}</p>
             <div class="admin-actions">
                 <button class="edit-btn" onclick="editProduct(${product.id})">编辑</button>
@@ -55,7 +133,7 @@ async function addProduct() {
     const image = document.getElementById('productImage').value;
     
     try {
-        const response = await fetchWithAuth('http://localhost:3000/api/admin/products', {
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/admin/products`, {
             method: 'POST',
             body: JSON.stringify({ name, description, price, stock, category, image })
         });
@@ -80,7 +158,7 @@ async function addProduct() {
 async function editProduct(productId) {
     try {
         // 获取产品详情（使用普通用户的产品详情API，因为它不需要管理员权限）
-        const response = await fetch(`http://localhost:3000/api/products/${productId}`);
+        const response = await fetch(`${getApiBaseUrl()}/api/products/${productId}`);
         if (response.ok) {
             const product = await response.json();
             openEditModal(product);
@@ -186,12 +264,14 @@ function openEditModal(product) {
                     
                     <div class="form-group" style="margin-bottom: 15px;">
                         <label for="editProductCategory" style="display: block; margin-bottom: 5px;">产品分类：</label>
-                        <input type="text" id="editProductCategory" name="category" required style="
+                        <select id="editProductCategory" name="category" required style="
                             width: 100%;
                             padding: 8px;
                             border: 1px solid #ddd;
                             border-radius: 3px;
                         ">
+                            <option value="">请选择商品类别</option>
+                        </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 15px;">
                         <label for="editProductImage" style="display: block; margin-bottom: 5px;">产品图片：</label>
@@ -251,6 +331,7 @@ function openEditModal(product) {
     document.getElementById('editProductPrice').value = product.price;
         document.getElementById('editProductStock').value = product.stock;
         document.getElementById('editProductCategory').value = product.category;
+    fetchCategories();
         document.getElementById('editProductImage').value = product.image || '';
     
     // 显示模态框
@@ -276,7 +357,7 @@ async function saveProduct() {
     const image = document.getElementById('editProductImage').value;
     
     try {
-        const response = await fetchWithAuth(`http://localhost:3000/api/admin/products/${productId}`, {
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/admin/products/${productId}`, {
             method: 'PUT',
             body: JSON.stringify({ name, description, price, stock, category, image })
         });
@@ -300,7 +381,7 @@ async function saveProduct() {
 async function deleteProduct(productId) {
     if (confirm('确定要删除这个产品吗？')) {
         try {
-            const response = await fetchWithAuth(`http://localhost:3000/api/admin/products/${productId}`, {
+            const response = await fetchWithAuth(`${getApiBaseUrl()}/api/admin/products/${productId}`, {
                 method: 'DELETE'
             });
             

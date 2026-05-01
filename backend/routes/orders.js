@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Order, OrderItem, Cart, Product, User } = require('../models');
+const { Order, OrderItem, Cart, Product, User, OperationLog } = require('../models');
 const { authMiddleware } = require('../middleware/auth');
 const { sendOrderConfirmation, sendShipmentNotification } = require('../services/emailService');
 const nodemailer = require('nodemailer');
@@ -78,6 +78,14 @@ router.post('/', authMiddleware, async (req, res) => {
       
       // 减少产品库存
       await item.Product.decrement('stock', { by: item.quantity });
+      await OperationLog.create({
+        userId: req.user.id,
+        account: req.user.email,
+        role: req.user.role,
+        action: '购买商品',
+        content: `${item.Product.category} ${item.Product.name} 单价:${item.Product.price} 数量:${item.quantity}`,
+        ipAddress: req.ip
+      });
     }
     
     // 清空购物车
@@ -199,6 +207,14 @@ router.post('/:id/pay', authMiddleware, async (req, res) => {
       paidAt: new Date()
     });
     console.log('订单状态已更新为已支付');
+    await OperationLog.create({
+      userId: req.user.id,
+      account: req.user.email,
+      role: req.user.role,
+      action: '支付订单',
+      content: `订单${order.id} 支付流水:${paymentId}`,
+      ipAddress: req.ip
+    });
     
     // 获取订单详情和用户信息
     const orderDetails = await Order.findByPk(order.id, {
@@ -250,6 +266,14 @@ router.post('/:id/ship', authMiddleware, async (req, res) => {
     });
 
     // 发送发货通知邮件
+    await OperationLog.create({
+      userId: req.user.id,
+      account: req.user.email,
+      role: req.user.role,
+      action: '确认发货',
+      content: `订单${order.id}`,
+      ipAddress: req.ip
+    });
     await sendShipmentNotification(order.User, order);
 
     res.json({ 

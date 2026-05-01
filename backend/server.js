@@ -37,6 +37,8 @@ const cartRoutes = require('./routes/cart');
 const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const emailRoutes = require('./routes/email');
+const analyticsRoutes = require('./routes/analytics');
+const managementRoutes = require('./routes/management');
 
 // 使用路由
 app.use('/api/auth', authRoutes);
@@ -45,6 +47,8 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/management', managementRoutes);
 
 // 静态文件服务 - 提供前端文件
 const frontendPath = path.resolve(__dirname, '../frontend');
@@ -52,6 +56,10 @@ console.log('前端文件路径:', frontendPath);
 app.use(express.static(frontendPath));
 
 // 提供前端路由
+app.get('/admin-sales*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'admin-sales.html'));
+});
+
 app.get('/admin*', (req, res) => {
   res.sendFile(path.join(frontendPath, 'admin.html'));
 });

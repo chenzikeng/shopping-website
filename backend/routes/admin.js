@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { Product, Order, OrderItem, User } = require('../models');
+const { Product, Order, OrderItem, User, OperationLog } = require('../models');
 const { Op } = require('sequelize');
-const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const { authMiddleware, adminMiddleware, salesOrAdminMiddleware } = require('../middleware/auth');
 const { sendShipmentNotification } = require('../services/emailService');
 
 // 产品管理
 
 // 添加产品
-router.post('/products', [authMiddleware, adminMiddleware], async (req, res) => {
+router.post('/products', [authMiddleware, salesOrAdminMiddleware], async (req, res) => {
   try {
     const { name, description, price, stock, category, image } = req.body;
     
@@ -21,6 +21,8 @@ router.post('/products', [authMiddleware, adminMiddleware], async (req, res) => 
       image
     });
     
+    await OperationLog.create({ userId: req.user.id, account: req.user.email, role: req.user.role, action: '添加商品', content: name, ipAddress: req.ip });
+    
     res.status(201).json({ message: '产品添加成功', product });
   } catch (error) {
     console.error('添加产品失败：', error);
@@ -29,7 +31,7 @@ router.post('/products', [authMiddleware, adminMiddleware], async (req, res) => 
 });
 
 // 获取所有产品
-router.get('/products', [authMiddleware, adminMiddleware], async (req, res) => {
+router.get('/products', [authMiddleware, salesOrAdminMiddleware], async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
@@ -53,7 +55,7 @@ router.get('/products', [authMiddleware, adminMiddleware], async (req, res) => {
 });
 
 // 更新产品
-router.put('/products/:id', [authMiddleware, adminMiddleware], async (req, res) => {
+router.put('/products/:id', [authMiddleware, salesOrAdminMiddleware], async (req, res) => {
   try {
     const { name, description, price, stock, category, image } = req.body;
     
@@ -71,6 +73,8 @@ router.put('/products/:id', [authMiddleware, adminMiddleware], async (req, res) 
       image
     });
     
+    await OperationLog.create({ userId: req.user.id, account: req.user.email, role: req.user.role, action: '修改商品信息', content: `${product.name} 价格:${price} 库存:${stock}`, ipAddress: req.ip });
+    
     res.json({ message: '产品更新成功', product });
   } catch (error) {
     console.error('更新产品失败：', error);
@@ -79,13 +83,14 @@ router.put('/products/:id', [authMiddleware, adminMiddleware], async (req, res) 
 });
 
 // 删除产品
-router.delete('/products/:id', [authMiddleware, adminMiddleware], async (req, res) => {
+router.delete('/products/:id', [authMiddleware, salesOrAdminMiddleware], async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) {
       return res.status(404).json({ message: '产品不存在' });
     }
     
+    await OperationLog.create({ userId: req.user.id, account: req.user.email, role: req.user.role, action: '删除商品', content: product.name, ipAddress: req.ip });
     await product.destroy();
     
     res.json({ message: '产品删除成功' });
@@ -98,7 +103,7 @@ router.delete('/products/:id', [authMiddleware, adminMiddleware], async (req, re
 // 订单管理
 
 // 获取所有订单
-router.get('/orders', [authMiddleware, adminMiddleware], async (req, res) => {
+router.get('/orders', [authMiddleware, salesOrAdminMiddleware], async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
     const offset = (page - 1) * limit;
@@ -135,7 +140,7 @@ router.get('/orders', [authMiddleware, adminMiddleware], async (req, res) => {
 });
 
 // 更新订单状态
-router.put('/orders/:id/status', [authMiddleware, adminMiddleware], async (req, res) => {
+router.put('/orders/:id/status', [authMiddleware, salesOrAdminMiddleware], async (req, res) => {
   try {
     const { status } = req.body;
     
@@ -148,6 +153,7 @@ router.put('/orders/:id/status', [authMiddleware, adminMiddleware], async (req, 
     }
     
     await order.update({ status });
+    await OperationLog.create({ userId: req.user.id, account: req.user.email, role: req.user.role, action: '更新订单状态', content: `订单${order.id}: ${status}`, ipAddress: req.ip });
     
     // 如果订单状态改为已发货，发送发货通知邮件
     if (status === 'shipped') {
@@ -164,7 +170,7 @@ router.put('/orders/:id/status', [authMiddleware, adminMiddleware], async (req, 
 // 销售统计报表
 
 // 获取销售统计
-router.get('/statistics', [authMiddleware, adminMiddleware], async (req, res) => {
+router.get('/statistics', [authMiddleware, salesOrAdminMiddleware], async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
@@ -179,7 +185,7 @@ router.get('/statistics', [authMiddleware, adminMiddleware], async (req, res) =>
     // 获取订单统计数据
     const orders = await Order.findAll({
       where,
-      include: [OrderItem]
+      include: [{ model: OrderItem, include: [Product] }]
     });
     
     // 计算总销售额

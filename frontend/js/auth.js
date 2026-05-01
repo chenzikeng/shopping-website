@@ -34,12 +34,16 @@ if (document.getElementById('logoutBtn')) {
 
 // 获取API基础URL的函数
 function getApiBaseUrl() {
-    // 如果是在localhost访问，使用localhost:3000
+    if (window.location.protocol === 'file:') {
+        return 'http://localhost:3000';
+    }
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return 'http://localhost:3000';
     }
-    // 如果是在其他域名访问，使用当前域名
-    return `${window.location.origin}`;
+    if (!window.location.origin || window.location.origin === 'null') {
+        return 'http://localhost:3000';
+    }
+    return window.location.origin;
 }
 
 // 登录函数
@@ -57,18 +61,15 @@ async function login(email, password) {
         const data = await response.json();
         
         if (response.ok) {
-            // 保存token到localStorage
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            
-            // 跳转到首页
-            window.location.href = 'index.html';
+            window.location.href = data.user.role === 'admin' || data.user.role === 'sales' ? 'admin.html' : 'index.html';
         } else {
             showMessage('登录失败：' + data.message, 'error');
         }
     } catch (error) {
         console.error('登录错误:', error);
-        showMessage('登录失败：网络错误', 'error');
+        showMessage('登录失败：网络错误，请确认后端服务 http://localhost:3000 已启动', 'error');
     }
 }
 
@@ -88,14 +89,13 @@ async function register(name, email, password, phone, address) {
         
         if (response.ok) {
             showMessage('注册成功，请登录', 'success');
-            // 跳转到登录页面
             window.location.href = 'login.html';
         } else {
             showMessage('注册失败：' + data.message, 'error');
         }
     } catch (error) {
         console.error('注册错误:', error);
-        showMessage('注册失败：网络错误', 'error');
+        showMessage('注册失败：网络错误，请确认后端服务 http://localhost:3000 已启动', 'error');
     }
 }
 
@@ -115,7 +115,6 @@ function showMessage(message, type) {
     const container = document.querySelector('.container') || document.body;
     container.insertBefore(messageDiv, container.firstChild);
     
-    // 3秒后移除消息
     setTimeout(() => {
         messageDiv.remove();
     }, 3000);

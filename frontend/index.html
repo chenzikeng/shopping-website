@@ -27,11 +27,27 @@
             <button id="searchBtn">搜索</button>
         </div>
 
-        <div class="products-container" id="productsContainer">
-            <!-- 产品列表将通过JavaScript动态加载 -->
-        </div>
+        <section class="category-filter-section">
+            <h2>商品类别</h2>
+            <div id="categoryFilterContainer" class="category-filter-list">
+                <button class="category-filter active" onclick="filterByCategory('')">全部商品</button>
+            </div>
+        </section>
+
+        <section id="recommendationsSection">
+            <h2>猜你喜欢</h2>
+            <div class="products-container" id="recommendationsContainer"></div>
+        </section>
+
+        <section id="productsSection">
+            <h2 id="productsSectionTitle">全部商品</h2>
+            <div class="products-container" id="productsContainer">
+                <!-- 产品列表将通过JavaScript动态加载 -->
+            </div>
+        </section>
     </main>
 
+    <script src="js/i18n.js"></script>
     <script src="js/common.js"></script>
     <script src="js/products.js"></script>
 </body>

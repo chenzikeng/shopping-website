@@ -20,6 +20,18 @@ function isAdmin() {
     return user ? user.role === 'admin' : false;
 }
 
+function isSalesOrAdmin() {
+    const user = getUser();
+    return user ? user.role === 'admin' || user.role === 'sales' : false;
+}
+
+function getApiBaseUrl() {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:3000';
+    }
+    return window.location.origin;
+}
+
 // 发送请求时添加认证头
 async function fetchWithAuth(url, options = {}) {
     const token = getToken();
@@ -71,7 +83,7 @@ async function updateCartCount() {
     }
     
     try {
-        const response = await fetchWithAuth('http://localhost:3000/api/cart');
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/cart`);
         if (response.ok) {
             const data = await response.json();
             const totalCount = data.cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -85,7 +97,7 @@ async function updateCartCount() {
 // 页面加载时检查登录状态
 window.addEventListener('DOMContentLoaded', function() {
     // 如果需要登录才能访问的页面，检查登录状态
-    const protectedPages = ['index.html', 'cart.html', 'orders.html', 'admin.html', 'admin-orders.html', 'admin-reports.html'];
+    const protectedPages = ['cart.html', 'orders.html', 'admin.html', 'admin-orders.html', 'admin-reports.html', 'admin-sales.html'];
     const currentPage = window.location.pathname.split('/').pop();
     
     if (protectedPages.includes(currentPage) && !isLoggedIn()) {
@@ -95,7 +107,13 @@ window.addEventListener('DOMContentLoaded', function() {
     
     // 如果是管理员页面，检查是否为管理员
     const adminPages = ['admin.html', 'admin-orders.html', 'admin-reports.html'];
-    if (adminPages.includes(currentPage) && !isAdmin()) {
+    if (adminPages.includes(currentPage) && !isSalesOrAdmin()) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const adminOnlyPages = ['admin-sales.html'];
+    if (adminOnlyPages.includes(currentPage) && !isAdmin()) {
         window.location.href = 'index.html';
         return;
     }

@@ -2,7 +2,38 @@
 姓名：陈子铿
 学号：202330452641
 
+**学号：** [请填写学号]  
+**姓名：** [请填写姓名]  
+**项目名称：** 在线购物网站  
+
 一个基于 Node.js + Express + MySQL 的在线购物网站系统。
+
+## 代码文件说明
+
+本项目采用前后端分离架构，主要包含以下代码文件：
+
+### 后端代码文件
+- **server.js** - Express服务器入口文件，配置中间件和路由
+- **config/db.js** - MySQL数据库连接配置
+- **models/User.js** - 用户数据模型，定义用户表结构和密码加密
+- **routes/auth.js** - 用户认证路由，处理注册、登录等功能
+- **middleware/auth.js** - JWT认证中间件，验证用户身份
+- **controllers/** - 业务逻辑控制器，处理具体业务功能
+
+### 前端代码文件
+- **frontend/index.html** - 网站首页，展示产品列表
+- **frontend/login.html** - 用户登录页面
+- **frontend/register.html** - 用户注册页面
+- **frontend/cart.html** - 购物车管理页面
+- **frontend/orders.html** - 用户订单查看页面
+- **frontend/admin.html** - 管理员功能页面
+- **frontend/js/products.js** - 产品展示和搜索功能
+- **frontend/js/common.js** - 通用JavaScript函数，认证检查
+- **frontend/css/styles.css** - 网站样式文件，响应式设计
+
+### 配置文件
+- **package.json** - 项目依赖和脚本配置
+- **.env** - 环境变量配置（数据库连接、JWT密钥等）
 
 ## 功能特点
 

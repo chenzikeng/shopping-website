@@ -46,3 +46,11 @@ exports.adminMiddleware = (req, res, next) => {
     return res.status(403).json({ message: '需要管理员权限' });
   }
 };
+
+exports.salesOrAdminMiddleware = (req, res, next) => {
+  if (req.user && (req.user.role === 'sales' || req.user.role === 'admin')) {
+    next();
+  } else {
+    return res.status(403).json({ message: '需要销售人员或管理员权限' });
+  }
+};
