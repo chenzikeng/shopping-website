@@ -6,7 +6,7 @@ window.addEventListener('DOMContentLoaded', function() {
 // 获取订单列表
 async function fetchOrders() {
     try {
-        const response = await fetchWithAuth('http://localhost:3000/api/orders');
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/orders`);
         
         if (response.ok) {
             const orders = await response.json();
@@ -75,7 +75,7 @@ function displayOrders(orders) {
 async function processPayment(orderId) {
     console.log('开始处理支付，订单ID:', orderId);
     try {
-        const response = await fetchWithAuth(`http://localhost:3000/api/orders/${orderId}/pay`, {
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/orders/${orderId}/pay`, {
             method: 'POST'
         });
         

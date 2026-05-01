@@ -27,7 +27,7 @@ window.addEventListener('DOMContentLoaded', function() {
 // 获取购物车数据
 async function fetchCart() {
     try {
-        const response = await fetchWithAuth('http://localhost:3000/api/cart');
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/cart`);
         if (response.ok) {
             const data = await response.json();
             displayCart(data.cartItems);
@@ -81,7 +81,7 @@ async function updateCartItem(itemId, quantity) {
     }
     
     try {
-        const response = await fetchWithAuth(`http://localhost:3000/api/cart/update/${itemId}`, {
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/cart/update/${itemId}`, {
             method: 'PUT',
             body: JSON.stringify({ quantity })
         });
@@ -102,7 +102,7 @@ async function updateCartItem(itemId, quantity) {
 // 删除购物车商品
 async function deleteCartItem(itemId) {
     try {
-        const response = await fetchWithAuth(`http://localhost:3000/api/cart/remove/${itemId}`, {
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/cart/remove/${itemId}`, {
             method: 'DELETE'
         });
         
@@ -147,7 +147,7 @@ async function checkout() {
     const paymentMethod = document.getElementById('paymentMethod').value;
     
     try {
-        const response = await fetchWithAuth('http://localhost:3000/api/orders', {
+        const response = await fetchWithAuth(`${getApiBaseUrl()}/api/orders`, {
             method: 'POST',
             body: JSON.stringify({ shippingAddress, paymentMethod })
         });
